@@ -1,4 +1,4 @@
-#!/usr/bin/python2.4
+#!/usr/local/bin/python2.4
 #
 # Copyright 2008, The Android Open Source Project
 #
@@ -77,6 +77,8 @@ class TestRunner(object):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
     logger.SetTimestampLogging(False)
+    pwd=os.getcwd()
+    logger.Init(pwd+"/log.xml")
     self._adb = None
     self._known_tests = None
     self._options = None
@@ -406,8 +408,11 @@ class TestRunner(object):
 
       if not self._options.skip_build:
         self._DoBuild()
-
+      a = 0
       for test_suite in self._GetTestsToRun():
+        logger.Log("<<<<<<<<<<<<<<<num:%s  />" %a)
+        a=a+1
+        logger.Log("<<<<<<<<<<<<<<begin to run test:%s/>" %test_suite.GetName())
         try:
           test_suite.Run(self._options, self._adb)
         except errors.WaitForResponseTimedOutError:
