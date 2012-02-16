@@ -77,8 +77,6 @@ class TestRunner(object):
     # disable logging of timestamp
     self._root_path = android_build.GetTop()
     logger.SetTimestampLogging(False)
-    pwd=os.getcwd()
-    logger.Init(pwd+"/log.xml")
     self._adb = None
     self._known_tests = None
     self._options = None
@@ -226,6 +224,21 @@ class TestRunner(object):
       print "%-25s %-40s %s" % (test.GetName(), test.GetBuildPath(),
                                 test.GetDescription())
     print "\nSee %s for more information" % self._TEST_FILE_NAME
+  def _OutLog(self):
+    date=time.strftime('%Y.%m.%d_%H.%M.%S',time.localtime(time.time()))
+    null="null"
+    out_path=android_build.GetTop()+"/out/host/linux-x86/"
+    if os.path.isdir(out_path):
+       logger.Log(out_path)
+       out_path=out_path+"testrunner"
+       if not os.path.isdir(out_path):
+           os.mkdir(out_path)
+       logger.Init(out_path+"/"+date+".xml")
+       return date
+    else:
+       logger.Log("Errors:"+out_path+"  is not exists")
+       return null
+        
 
   def _DoBuild(self):
     logger.SilentLog("Building tests...")
@@ -408,15 +421,20 @@ class TestRunner(object):
 
       if not self._options.skip_build:
         self._DoBuild()
-      a = 0
+      if self._options.coverage:
+        if  self._OutLog()=="null":
+           return
+      a = 0 
       for test_suite in self._GetTestsToRun():
-        logger.Log("<<<<<<<<<<<<<<<num:%s  />" %a)
+        logger.Log("<<<<<<<<<<<<<<%s" %test_suite) 
+        logger.Log("<<<<<<<<<<<<<<<num:%s" %a)
         a=a+1
-        logger.Log("<<<<<<<<<<<<<<begin to run test:%s/>" %test_suite.GetName())
+        logger.Log("<<<<<<<<<<<<<<begin to run test:%s" %test_suite.GetName())
         try:
           test_suite.Run(self._options, self._adb)
         except errors.WaitForResponseTimedOutError:
           logger.Log("Timed out waiting for response")
+        logger.Log("<<<<<<<<<<<<<<end")
 
     except KeyboardInterrupt:
       logger.Log("Exiting...")
